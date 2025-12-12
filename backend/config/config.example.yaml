@@ -1,0 +1,87 @@
+# NetBackup Configuration
+
+# Input sources - where to get device list (executed in sequence)
+input:
+  - type: netbox
+    config:
+      url: netbox.example.com
+      token: your-netbox-api-token-here
+      
+      # Filter by status
+      filter_status:
+        - active
+      
+      # Filter by custom fields (multiple filters supported)
+      custom_field_filter:
+        edna_backup: true
+      
+      # Custom field for device model (required)
+      model_custom_field: edna_model
+      
+      # Default credentials
+      default_username: ${EDNA_DEFAULT_USERNAME:-admin}
+      default_password: ${EDNA_DEFAULT_PASSWORD:-changeme}
+      
+      # Group-specific credentials (by manufacturer slug)
+      groups:
+        cisco:
+          username: ${CISCO_USERNAME:-admin}
+          password: ${CISCO_PASSWORD}
+        mikrotik:
+          username: ${MIKROTIK_USERNAME:-admin}
+          password: ${MIKROTIK_PASSWORD}
+        fortinet:
+          username: ${FORTINET_USERNAME:-admin}
+          password: ${FORTINET_PASSWORD}
+      
+      port: 22
+
+# Output destinations - where to save backups (executed in sequence)
+output:
+  - type: filesystem
+    config:
+      path: /opt/backups
+      retention: 20  # Number of backups to keep per device
+      format: text
+      organize_by: device  # device or date
+
+# Backup scheduler
+scheduler:
+  enabled: true
+  cron: "0 12,22 * * *"  # (cron expression: minute hour day month day_of_week)
+  #cron: "*/10 * * * *"  # Every 10 minutes for testing
+  max_workers: 4  # Number of parallel backup threads
+
+# API server configuration
+api:
+  host: 127.0.0.1
+  port: 8000
+  cors_origins:
+    - http://localhost
+    - http://localhost:4200
+    - http://localhost:4300
+    - http://localhost:3000
+    - http://localhost:5173
+    - "*"
+
+# Logging configuration
+logging:
+  level: WARNING  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+# Authentication
+auth:
+  # JWT settings
+  jwt:
+    secret_key: ${AUTH_JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+    algorithm: HS256
+    expire_minutes: 1440  # 24 hours
+  
+  # LDAP authentication (optional, set enabled: true to use)
+  ldap:
+    enabled: false
+    server: ldap://ldap.example.com
+    port: 389
+    base_dn: dc=example,dc=com
+    user_search_attr: uid
+    bind_dn: 
+    bind_password: ${AUTH_LDAP_BIND_PASSWORD:-}
+    timeout: 5  # Connection timeout in seconds

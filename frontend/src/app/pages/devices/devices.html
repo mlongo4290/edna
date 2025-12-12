@@ -1,0 +1,130 @@
+<div class="card">
+    <h2 class="mb-4">Scheduler status</h2>
+    <p class="text-surface-600 dark:text-surface-400 mb-6">Current status of the backup scheduler</p>
+
+    <div class="flex justify-content-between align-items-center mb-5 gap-3">
+        <p-badge [severity]="schedulerStatus().is_running ? 'success' : 'danger'"
+            [value]="schedulerStatus().is_running ? 'Scheduler is running' : 'Scheduler is stopped'"></p-badge>
+
+        <p-badge severity="info"
+            [value]="'Last run: ' + (schedulerStatus().last_run ? (schedulerStatus().last_run | date: 'yyyy-MM-dd HH:mm:ss') : 'N/A')"></p-badge>
+
+        <p-badge severity="info"
+            [value]="'Next run: ' + (schedulerStatus().next_run ? (schedulerStatus().next_run | date: 'yyyy-MM-dd HH:mm:ss') : 'N/A')"></p-badge>
+
+        <p-badge severity="info"
+            [value]="'Cron expression: ' + (schedulerStatus().cron ? schedulerStatus().cron : 'N/A')"></p-badge>
+    </div>
+    <div class="flex gap-2">
+        <p-button label="Start Scheduler" icon="pi pi-play" (onClick)="startScheduler()" severity="success"
+            [disabled]="schedulerStatus().is_running"></p-button>
+        <p-button label="Stop Scheduler" icon="pi pi-stop" (onClick)="stopScheduler()" severity="danger"
+            [disabled]="!schedulerStatus().is_running"></p-button>
+    </div>
+</div>
+
+<div class="card">
+
+    <h2 class="mb-4">Devices</h2>
+    <p class="text-surface-600 dark:text-surface-400 mb-6">Backed up devices</p>
+
+    <div class="flex justify-content-between align-items-center mb-5 gap-3">
+        <div>
+            <p-button label="Backup now" icon="pi pi-plus" (onClick)="runBackup()" severity="primary">
+            </p-button>
+        </div>
+    </div>
+
+    <p-table #dt [value]="devices()" [loading]="loading()" [paginator]="true" [rows]="50"
+        [totalRecords]="totalRecords()" [rowsPerPageOptions]="[10, 25, 50, 100, 200]" [showCurrentPageReport]="true"
+        [filterDelay]="300" sortField="name" [sortOrder]="1" styleClass="p-datatable-striped"
+        [globalFilterFields]="['name', 'host', 'device_type']">
+
+        <ng-template #caption>
+            <div class="flex">
+                <p-iconfield iconPosition="left" class="ml-auto">
+                    <p-inputicon>
+                        <i class="pi pi-search"></i>
+                    </p-inputicon>
+                    <input pInputText type="text" (input)="dt.filterGlobal($event.target.value, 'contains')"
+                        placeholder="Search keyword" />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="name" style="min-width: 200px;">
+                    Name
+                    <p-sortIcon field="name" />
+                    <p-columnFilter type="text" field="name" display="menu" matchMode="contains" [showMatchModes]="true"
+                        [showOperator]="true" [showAddButton]="true" />
+                </th>
+                <th pSortableColumn="host" style="min-width: 200px;">
+                    Host
+                    <p-sortIcon field="host" />
+                    <p-columnFilter type="text" field="host" display="menu" matchMode="contains" [showMatchModes]="true"
+                        [showOperator]="true" [showAddButton]="true" />
+                </th>
+                <th pSortableColumn="device_type" style="min-width: 200px;">
+                    Device Type
+                    <p-sortIcon field="device_type" />
+                    <p-columnFilter type="text" field="device_type" display="menu" matchMode="contains"
+                        [showMatchModes]="true" [showOperator]="true" [showAddButton]="true" />
+                </th>
+                <th pSortableColumn="last_backup" style="min-width: 200px;">
+                    Last Backup
+                    <p-sortIcon field="last_backup" />
+                    <p-columnFilter type="text" field="last_backup" display="menu" matchMode="contains"
+                        [showMatchModes]="true" [showOperator]="true" [showAddButton]="true" />
+                </th>
+                <th style="min-width: 150px;">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-device>
+            <tr>
+                <td>{{ device.name }}</td>
+                <td>{{ device.host }}</td>
+                <td>{{ device.device_type }}</td>
+                <td>{{ device.last_backup | date: 'yyyy-MM-dd HH:mm:ss'}}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true"
+                            pTooltip="View last backup" tooltipPosition="top" (onClick)="viewBackup(device)">
+                        </p-button>
+                        <p-button icon="pi pi-download" severity="success" [text]="true" [rounded]="true"
+                            pTooltip="Download last backup" tooltipPosition="top" (onClick)="downloadBackup(device)">
+                        </p-button>
+                        <p-button icon="pi pi-history" severity="success" [text]="true" [rounded]="true"
+                            pTooltip="View backup history" tooltipPosition="top" (onClick)="viewBackupHistory(device)">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="3" class="text-center">
+                    No devices found.
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="viewBackupModal" [header]="backupDialogHeader()" [modal]="true" [draggable]="true"
+    [maximizable]="true" [resizable]="true">
+    <div class="flex flex-col gap-4 py-4">
+        <div class="font-mono mb-2 ms-2" style="white-space: pre-wrap; word-wrap: break-word;">{{ lastLogContent()
+            }}
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <p-button label="Close" icon="pi pi-times" (click)="viewBackupModal.set(false)" severity="secondary" />
+    </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>

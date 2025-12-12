@@ -1,0 +1,17 @@
+[Unit]
+Description=EDNA - Network Device Configuration Backup
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/edna/backend
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/python3 /opt/edna/backend/main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

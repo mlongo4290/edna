@@ -1,0 +1,75 @@
+<div class="card">
+
+    <h2 class="mb-4">{{ backupHeader() }}</h2>
+    <p class="text-surface-600 dark:text-surface-400 mb-6">Configuration backup history</p>
+
+    <div class="flex justify-content-between align-items-center mb-5 gap-3">
+        <div>
+            <p-button label="Home" icon="pi pi-home" (onClick)="goHome()" severity="primary">
+            </p-button>
+        </div>
+    </div>
+
+    <p-table [value]="backups()" [loading]="loading()" [paginator]="true" [rows]="50" [totalRecords]="totalRecords()"
+        [rowsPerPageOptions]="[10, 25, 50, 100, 200]" [showCurrentPageReport]="true" [filterDelay]="300"
+        sortField="creation_time" [sortOrder]="-1" styleClass="p-datatable-striped">
+
+        <ng-template #header>
+            <tr>
+                <th pSortableColumn="id" style="min-width: 300px;">
+                    ID
+                    <p-sortIcon field="id" />
+                </th>
+                <th pSortableColumn="creation_time" style="min-width: 200px;">
+                    Created
+                    <p-sortIcon field="creation_time" />
+                </th>
+                <th pSortableColumn="elapsed_time" style="min-width: 150px;">
+                    Age
+                    <p-sortIcon field="elapsed_time" />
+                </th>
+                <th style="min-width: 150px;">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-backup>
+            <tr>
+                <td>{{ backup.id }}</td>
+                <td>{{ backup.creation_time | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+                <td>{{ backup.elapsed_time }}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-download" severity="success" [text]="true" [rounded]="true"
+                            pTooltip="Download backup" tooltipPosition="top" (onClick)="downloadBackup(backup.id)">
+                        </p-button>
+                        <p-button icon="pi pi-eye" severity="info" [text]="true" [rounded]="true"
+                            pTooltip="View content" tooltipPosition="top" (onClick)="viewBackup(backup.id)">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="4" class="text-center">
+                    No backups found.
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog [(visible)]="viewBackupModal" [header]="backupDialogHeader()" [modal]="true" [draggable]="true"
+    [maximizable]="true" [resizable]="true">
+    <div class="flex flex-col gap-4 py-4">
+        <div class="font-mono mb-2 ms-2" style="white-space: pre-wrap; word-wrap: break-word;">{{ backupContent()
+            }}
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <p-button label="Close" icon="pi pi-times" (click)="viewBackupModal.set(false)" severity="secondary" />
+    </ng-template>
+</p-dialog>
+<p-toast></p-toast>
