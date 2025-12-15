@@ -107,5 +107,3 @@ Create `backend/modules/models/your_vendor.py` implementing `DeviceModel`
 ## License
 
 MIT
-
-MIT
